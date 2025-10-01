@@ -1,0 +1,47 @@
+<html>
+    <head>
+        <title>Adnavce JavaScript</title>
+    </head>
+    <body>
+
+
+
+        <script>
+            // var name = [...'Jodhpur'];
+            // console.log(name);
+
+            var userInfo = [
+                {
+                    name : 'User 1',
+                    email : 'user1@gmail.com'
+                },
+                {
+                    name : 'User 2',
+                    email : 'user2@gmail.com'
+                }
+            ]
+
+            var data = {
+                name : 'User 3',
+                email : 'user3@gmail.com'
+            }
+
+            // userInfo = [...userInfo, data];
+            userInfo = [data, ...userInfo];
+
+            // console.log(userInfo);
+
+
+            // function userDataGet(user){
+            //     console.log(user.name);
+            // }
+            
+            function userDataGet({ name, email }){
+                console.log(name);
+                console.log(email);
+            }
+
+            userDataGet(data);
+        </script>
+    </body>
+</html>
