@@ -35,6 +35,7 @@ export default function ProductSection({ title, description, children }) {
             <div class="container text-center py-4">
                 <h1> {title} </h1>
                 <p>{description}</p>
+                
 
                 {children}
             </div>
