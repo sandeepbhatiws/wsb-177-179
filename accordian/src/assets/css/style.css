@@ -1,0 +1,32 @@
+*{
+    margin: 0px;
+    padding: 0px;
+}
+
+.faq{
+    max-width: 1200px;
+    margin: auto;
+    padding: 50px;
+    box-sizing: border-box;
+}
+.faqquestion{
+    border: 1px solid gray;
+    margin-bottom: 15px;
+}
+.question{
+    padding: 15px;
+    background-color: black;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+.question span{
+    float: right;
+}
+.answer{
+    padding: 15px;
+}
+
+.display{
+    display: none;
+}
