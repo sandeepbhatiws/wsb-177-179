@@ -10,10 +10,9 @@ export default function Home() {
     const [products, setProducts] = useState([]);
 
     useEffect(() => {
-        axios.get('https://dummyjson.com/products')
+        axios.get('https://wscubetech.co/ecommerce-api/products.php?limit=12')
         .then((result) => {
-            setProducts(result.data.products);
-            console.log(result.data.products)
+            setProducts(result.data.data);
         })
         .catch(() => {
             toast.error('Something went wrong !')
@@ -34,9 +33,9 @@ export default function Home() {
                     <div class="row">
                         
                         {
-                            products.map(() => {
+                            products.map((value, index) => {
                                 return(
-                                    <ProductCard/>
+                                    <ProductCard key={index} product={value} type="1"/>
                                 )
                             })
                         }
