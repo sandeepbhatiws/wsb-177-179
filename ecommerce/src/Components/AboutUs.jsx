@@ -5,12 +5,10 @@ import Footer from './Common/Footer'
 export default function AboutUs() {
   return (
     <>
-      <Header/>
 
 
       About Us
 
-      <Footer/>
     </>
   )
 }

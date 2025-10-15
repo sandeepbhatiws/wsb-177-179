@@ -8,6 +8,7 @@ import ProductListing from './Components/ProductListing'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import AboutUs from './Components/AboutUs'
 import Commonlayout from './Components/Commonlayout'
+import ProductDetails from './Components/ProductDetails'
 
 createRoot(document.getElementById('root')).render(
   <>
@@ -21,10 +22,11 @@ createRoot(document.getElementById('root')).render(
         <Route element={<Commonlayout/>}>
             <Route path='/' element={ <Home/> } />
             <Route path='about-us' element={ <AboutUs/> }/>
-            
+            <Route path='products' element={ <ProductListing/> }/>
+            <Route path='product-details/:id?/:name?' element={ <ProductDetails/> }/>
         </Route>
 
-        <Route path='products' element={ <ProductListing/> }/>
+        
 
       </Routes>
     </BrowserRouter>

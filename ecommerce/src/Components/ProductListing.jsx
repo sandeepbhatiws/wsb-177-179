@@ -114,7 +114,6 @@ export default function ProductListing() {
 
     return (
         <>
-            <Header />
             <div class="search-section">
                 <div class="container-fluid container-xl">
                     <div class="row main-content ml-md-0">
@@ -247,8 +246,6 @@ export default function ProductListing() {
                     </div>
                 </div>
             </div>
-
-            <Footer />
         </>
     )
 }

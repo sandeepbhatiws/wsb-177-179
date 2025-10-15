@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router'
 
 export default function ProductCard({ product, type }) {
     return (
@@ -12,7 +13,10 @@ export default function ProductCard({ product, type }) {
                     </ul>
                 </div>
                 <div class="tag bg-red">{ product.category_name }</div>
-                <div class="title pt-4 pb-1">{ product.name }</div>
+                <Link to={`/product-details/${product.id}`}>
+                    <div class="title pt-4 pb-1">{ product.name }</div>
+                </Link>
+                
                 <div class="d-flex align-content-center justify-content-center"> <span class="fas fa-star"></span> <span class="fas fa-star"></span> <span class="fas fa-star"></span> <span class="fas fa-star"></span> <span class="fas fa-star"></span> </div>
                 <div class="price">$ {product.price}</div>
             </div>

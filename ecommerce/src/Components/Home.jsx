@@ -22,8 +22,6 @@ export default function Home() {
 
     return (
         <>
-            <Header />
-
             <div className='container-fluid'>
                 <div class="container bg-white">
                     <nav class="navbar navbar-expand-md navbar-light bg-white">
@@ -44,8 +42,6 @@ export default function Home() {
                 </div>
             </div>
 
-
-            <Footer />
         </>
     )
 }
