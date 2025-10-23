@@ -9,6 +9,7 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import AboutUs from './Components/AboutUs'
 import Commonlayout from './Components/Commonlayout'
 import ProductDetails from './Components/ProductDetails'
+import ViewCart from './Components/ViewCart'
 
 createRoot(document.getElementById('root')).render(
   <>
@@ -24,6 +25,7 @@ createRoot(document.getElementById('root')).render(
             <Route path='about-us' element={ <AboutUs/> }/>
             <Route path='products' element={ <ProductListing/> }/>
             <Route path='product-details/:id?/:name?' element={ <ProductDetails/> }/>
+            <Route path='view-carts' element={ <ViewCart/> }/>
         </Route>
 
         

@@ -1,7 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router'
+import { FaShoppingBag } from "react-icons/fa";
 
-export default function ProductCard({ product, type }) {
+export default function ProductCard({ product, type, addToCart }) {
     return (
         <>
             <div class={ type == 1 ? "col-lg-3 col-sm-6 d-flex flex-column align-items-center justify-content-center product-item my-3" : "col-lg-4 col-sm-6 d-flex flex-column align-items-center justify-content-center product-item my-3"  }>
@@ -9,7 +10,7 @@ export default function ProductCard({ product, type }) {
                     <ul class="d-flex align-items-center justify-content-center list-unstyled icons">
                         <li class="icon"><span class="fas fa-expand-arrows-alt"></span></li>
                         <li class="icon mx-3"><span class="far fa-heart"></span></li>
-                        <li class="icon"><span class="fas fa-shopping-bag"></span></li>
+                        <li class="icon" onClick={() => addToCart(product) }><FaShoppingBag /></li>
                     </ul>
                 </div>
                 <div class="tag bg-red">{ product.category_name }</div>

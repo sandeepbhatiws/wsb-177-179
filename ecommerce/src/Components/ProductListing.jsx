@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import Header from './Common/Header'
 import Footer from './Common/Footer'
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ProductCard from './Common/ProductCard';
 import ResponsivePagination from 'react-responsive-pagination';
+import { MdDescription } from 'react-icons/md';
+import { Context } from './Common/ContextAPI';
 
 export default function ProductListing() {
 
@@ -111,6 +113,7 @@ export default function ProductListing() {
         setSorting(i)
     }
 
+    const { addToCart } = useContext(Context);
 
     return (
         <>
@@ -231,7 +234,7 @@ export default function ProductListing() {
                                 {
                                     products.map((value, index) => {
                                         return (
-                                            <ProductCard key={index} type="2" product={value} />
+                                            <ProductCard addToCart={addToCart} key={index} type="2" product={value} />
                                         )
                                     })
                                 }

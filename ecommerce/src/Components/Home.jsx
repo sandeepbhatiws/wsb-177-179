@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import Header from './Common/Header'
 import Footer from './Common/Footer'
 import ProductCard from './Common/ProductCard'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { Context } from './Common/ContextAPI'
 
 export default function Home() {
 
@@ -19,6 +20,8 @@ export default function Home() {
         })
     }, []);
 
+    const { addToCart } = useContext(Context);
+
 
     return (
         <>
@@ -33,7 +36,7 @@ export default function Home() {
                         {
                             products.map((value, index) => {
                                 return(
-                                    <ProductCard key={index} product={value} type="1"/>
+                                    <ProductCard addToCart={addToCart} key={index} product={value} type="1"/>
                                 )
                             })
                         }
