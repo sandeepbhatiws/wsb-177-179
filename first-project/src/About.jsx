@@ -2,9 +2,11 @@ import React, { useState } from 'react'
 
 export default function About() {
     
-    var status = 1;
+    // var status = 1;
 
     var [count, setCount] = useState(51);
+
+    // var count = 40;
 
     const counter = () => {
         count++;

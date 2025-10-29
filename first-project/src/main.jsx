@@ -12,6 +12,7 @@ createRoot(document.getElementById('root')).render(
     <About/> */}
     {/* <ShowHidePassword/> */}
 
-    <Services/>
+      <About/>
+    {/* <Services/> */}
   </StrictMode>,
 )
