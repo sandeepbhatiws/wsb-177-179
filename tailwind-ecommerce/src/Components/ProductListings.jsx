@@ -16,16 +16,18 @@ import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon, Squares2X2Icon } from
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import ProductCard from './ProductCard'
+import ResponsivePagination from 'react-responsive-pagination';
+import 'react-responsive-pagination/themes/classic-light-dark.css';
 
 const sortOptions = [
-  { name: 'Name (A-Z)', href: '1', current: true },
-  { name: 'Name (Z-A)', href: '2', current: false },
-  { name: 'Price: Low to High', href: '3', current: false },
-  { name: 'Price: High to Low', href: '4', current: false },
-  { name: 'Discount Price: Low to High', href: '5', current: false },
-  { name: 'Discount Price: High to Low', href: '6', current: false },
-  { name: 'Rating: Low to High', href: '7', current: false },
-  { name: 'Rating: High to Low', href: '8', current: false },
+  { name: 'Name (A-Z)', value: '1' },
+  { name: 'Name (Z-A)', value: '2' },
+  { name: 'Price: Low to High', value: '3' },
+  { name: 'Price: High to Low', value: '4' },
+  { name: 'Discount Price: Low to High', value: '5' },
+  { name: 'Discount Price: High to Low', value: '6' },
+  { name: 'Rating: Low to High', value: '7' },
+  { name: 'Rating: High to Low', value: '8' },
 ]
 
 const subCategories = [
@@ -86,33 +88,89 @@ export default function ProductListings() {
 
   useEffect(() => {
     axios.get('https://wscubetech.co/ecommerce-api/categories.php')
-    .then((result) => {
-      setCategories(result.data.data);
-    })
-    .catch(() => {
+      .then((result) => {
+        setCategories(result.data.data);
+      })
+      .catch(() => {
         toast.error('Something went wrong !!');
-    })
-  },[])
+      })
+  }, [])
 
   useEffect(() => {
     axios.get('https://wscubetech.co/ecommerce-api/brands.php')
-    .then((result) => {
-      setBrands(result.data.data);
-    })
-    .catch(() => {
+      .then((result) => {
+        setBrands(result.data.data);
+      })
+      .catch(() => {
         toast.error('Something went wrong !!');
-    })
-  },[])
+      })
+  }, [])
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [limit, setLimit] = useState(15);
+  const [sorting, setsorting] = useState('');
+  const [name, setName] = useState('');
+  const [price_from, setPriceFrom] = useState('');
+  const [price_to, setPriceTo] = useState('');
+  const [discount_from, setDiscountFrom] = useState('');
+  const [discount_to, setDiscountTo] = useState('');
+  const [rating, setRating] = useState('');
+  const [searchBrands, setSearchBrands] = useState([]);
+  const [searchCategories, setSearchCategories] = useState([]);
 
   useEffect(() => {
-    axios.get('https://wscubetech.co/ecommerce-api/products.php')
-    .then((result) => {
-      setProducts(result.data.data);
+    axios.get('https://wscubetech.co/ecommerce-api/products.php', {
+      params: {
+        page: currentPage,
+        limit: limit,
+        sorting: sorting,
+        name: name,
+        price_from: price_from,
+        price_to: price_to,
+        discount_from: discount_from,
+        discount_to: discount_to,
+        rating: rating,
+        brands: searchBrands.toString(),
+        categories: searchCategories.toString()
+      }
     })
-    .catch(() => {
+      .then((result) => {
+        setProducts(result.data.data);
+        setTotalPages(result.data.total_pages)
+      })
+      .catch(() => {
         toast.error('Something went wrong !!');
-    })
-  },[])
+      })
+  }, [currentPage, limit, sorting, name, price_from, price_to, discount_from, discount_to, rating, searchBrands, searchCategories])
+
+  const filterSorting = (i) => {
+    setCurrentPage(1);
+    setsorting(i);
+  }
+
+  const filterName = (event) => {
+    setCurrentPage(1);
+    setName(event.target.value);
+  }
+
+  const filterRating = (i) => {
+    setCurrentPage(1);
+    setRating(i);
+  }
+
+  const filterDiscountPrice = (from, to) => {
+    setCurrentPage(1);
+    setDiscountFrom(from);
+    setDiscountTo(to);
+  }
+
+  const filterPrice = (from, to) => {
+    setCurrentPage(1);
+    setPriceFrom(from);
+    setPriceTo(to);
+  }
 
   return (
     <div className="bg-white">
@@ -232,6 +290,10 @@ export default function ProductListings() {
                   />
                 </MenuButton>
 
+                <div class="flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-indigo-600">
+                  <input type="text" placeholder="Search by name" class="block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6" onKeyUp={ filterName } />
+                </div>
+
                 <MenuItems
                   transition
                   className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-2xl ring-1 ring-black/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
@@ -240,11 +302,9 @@ export default function ProductListings() {
                     {sortOptions.map((option) => (
                       <MenuItem key={option.name}>
                         <a
-                          href={option.href}
-                          className={classNames(
-                            option.current ? 'font-medium text-gray-900' : 'text-gray-500',
-                            'block px-4 py-2 text-sm data-focus:bg-gray-100 data-focus:outline-hidden',
-                          )}
+                          onClick={() => filterSorting(option.value)}
+                          className={
+                            'block px-4 cursor-pointer py-2 text-sm data-focus:bg-gray-100 data-focus:outline-hidden'}
                         >
                           {option.name}
                         </a>
@@ -277,220 +337,250 @@ export default function ProductListings() {
             <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-4">
               {/* Filters */}
               <form className="hidden lg:block">
-                
+
                 <Disclosure as="div" className="border-b border-gray-200 py-6">
-                    <h3 className="-my-3 flow-root">
-                      <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
-                        <span className="font-medium text-gray-900">Categories</span>
-                        <span className="ml-6 flex items-center">
-                          <PlusIcon aria-hidden="true" className="size-5 group-data-open:hidden" />
-                          <MinusIcon aria-hidden="true" className="size-5 group-not-data-open:hidden" />
-                        </span>
-                      </DisclosureButton>
-                    </h3>
-                    <DisclosurePanel className="pt-6 filter-scroll">
-                      <div className="space-y-4">
-                        {categories.map((value, index) => (
-                          <div key={index} className="flex gap-3">
-                            <div className="flex h-5 shrink-0 items-center">
-                              <div className="group grid size-4 grid-cols-1">
-                                <input
-                                  id={`category-${value.id}`}
-                                  type="checkbox"
-                                  className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                  <h3 className="-my-3 flow-root">
+                    <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
+                      <span className="font-medium text-gray-900">Categories</span>
+                      <span className="ml-6 flex items-center">
+                        <PlusIcon aria-hidden="true" className="size-5 group-data-open:hidden" />
+                        <MinusIcon aria-hidden="true" className="size-5 group-not-data-open:hidden" />
+                      </span>
+                    </DisclosureButton>
+                  </h3>
+                  <DisclosurePanel className="pt-6 filter-scroll">
+                    <div className="space-y-4">
+                      {categories.map((value, index) => (
+                        <div key={index} className="flex gap-3">
+                          <div className="flex h-5 shrink-0 items-center">
+                            <div className="group grid size-4 grid-cols-1">
+                              <input
+                                id={`category-${value.id}`}
+                                type="checkbox"
+                                className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                              />
+                              <svg
+                                fill="none"
+                                viewBox="0 0 14 14"
+                                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                              >
+                                <path
+                                  d="M3 8L6 11L11 3.5"
+                                  strokeWidth={2}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="opacity-0 group-has-checked:opacity-100"
                                 />
-                                <svg
-                                  fill="none"
-                                  viewBox="0 0 14 14"
-                                  className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
-                                >
-                                  <path
-                                    d="M3 8L6 11L11 3.5"
-                                    strokeWidth={2}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="opacity-0 group-has-checked:opacity-100"
-                                  />
-                                  <path
-                                    d="M3 7H11"
-                                    strokeWidth={2}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="opacity-0 group-has-indeterminate:opacity-100"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
-                            <label htmlFor={`category-${value.id}`} className="text-sm text-gray-600">
-                              {value.name}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </DisclosurePanel>
-                  </Disclosure>
-
-                  <Disclosure as="div" className="border-b border-gray-200 py-6">
-                    <h3 className="-my-3 flow-root">
-                      <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
-                        <span className="font-medium text-gray-900">Brands</span>
-                        <span className="ml-6 flex items-center">
-                          <PlusIcon aria-hidden="true" className="size-5 group-data-open:hidden" />
-                          <MinusIcon aria-hidden="true" className="size-5 group-not-data-open:hidden" />
-                        </span>
-                      </DisclosureButton>
-                    </h3>
-                    <DisclosurePanel className="pt-6 filter-scroll">
-                      <div className="space-y-4">
-                        {brands.map((value, index) => (
-                          <div key={index} className="flex gap-3">
-                            <div className="flex h-5 shrink-0 items-center">
-                              <div className="group grid size-4 grid-cols-1">
-                                <input
-                                  id={`brand-${value.id}`}
-                                  type="checkbox"
-                                  className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                <path
+                                  d="M3 7H11"
+                                  strokeWidth={2}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="opacity-0 group-has-indeterminate:opacity-100"
                                 />
-                                <svg
-                                  fill="none"
-                                  viewBox="0 0 14 14"
-                                  className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
-                                >
-                                  <path
-                                    d="M3 8L6 11L11 3.5"
-                                    strokeWidth={2}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="opacity-0 group-has-checked:opacity-100"
-                                  />
-                                  <path
-                                    d="M3 7H11"
-                                    strokeWidth={2}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="opacity-0 group-has-indeterminate:opacity-100"
-                                  />
-                                </svg>
-                              </div>
+                              </svg>
                             </div>
-                            <label htmlFor={`brand-${value.id}`} className="text-sm text-gray-600">
-                              {value.name}
-                            </label>
                           </div>
-                        ))}
-                      </div>
-                    </DisclosurePanel>
-                  </Disclosure>
-                  
-                  <Disclosure as="div" className="border-b border-gray-200 py-6">
-                    <h3 className="-my-3 flow-root">
-                      <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
-                        <span className="font-medium text-gray-900">Price Filter</span>
-                        <span className="ml-6 flex items-center">
-                          <PlusIcon aria-hidden="true" className="size-5 group-data-open:hidden" />
-                          <MinusIcon aria-hidden="true" className="size-5 group-not-data-open:hidden" />
-                        </span>
-                      </DisclosureButton>
-                    </h3>
-                    <DisclosurePanel className="pt-6">
-                      <div className="space-y-4">
-                          <div class="flex items-center gap-x-3">
-                            <input id="0-1000" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="0-1000" class="block text-sm/6 font-medium text-gray-900">Rs.0 - Rs.1000</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="1000-2000" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="1000-2000" class="block text-sm/6 font-medium text-gray-900">Rs.1000 - Rs.2000</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="2000-3000" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="2000-3000" class="block text-sm/6 font-medium text-gray-900">Rs.2000 - Rs.3000</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="3000-4000" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="3000-4000" class="block text-sm/6 font-medium text-gray-900">Rs.3000 - Rs.4000</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="5000" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="5000" class="block text-sm/6 font-medium text-gray-900">Rs.5000 and Above</label>
-                          </div>
-                      </div>
-                    </DisclosurePanel>
-                  </Disclosure>
+                          <label htmlFor={`category-${value.id}`} className="text-sm text-gray-600">
+                            {value.name}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </DisclosurePanel>
+                </Disclosure>
 
-                  <Disclosure as="div" className="border-b border-gray-200 py-6">
-                    <h3 className="-my-3 flow-root">
-                      <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
-                        <span className="font-medium text-gray-900">Discount Price Filter</span>
-                        <span className="ml-6 flex items-center">
-                          <PlusIcon aria-hidden="true" className="size-5 group-data-open:hidden" />
-                          <MinusIcon aria-hidden="true" className="size-5 group-not-data-open:hidden" />
-                        </span>
-                      </DisclosureButton>
-                    </h3>
-                    <DisclosurePanel className="pt-6">
-                      <div className="space-y-4">
-                          <div class="flex items-center gap-x-3">
-                            <input id="0-20" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="0-20" class="block text-sm/6 font-medium text-gray-900">0% - 20%</label>
+                <Disclosure as="div" className="border-b border-gray-200 py-6">
+                  <h3 className="-my-3 flow-root">
+                    <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
+                      <span className="font-medium text-gray-900">Brands</span>
+                      <span className="ml-6 flex items-center">
+                        <PlusIcon aria-hidden="true" className="size-5 group-data-open:hidden" />
+                        <MinusIcon aria-hidden="true" className="size-5 group-not-data-open:hidden" />
+                      </span>
+                    </DisclosureButton>
+                  </h3>
+                  <DisclosurePanel className="pt-6 filter-scroll">
+                    <div className="space-y-4">
+                      {brands.map((value, index) => (
+                        <div key={index} className="flex gap-3">
+                          <div className="flex h-5 shrink-0 items-center">
+                            <div className="group grid size-4 grid-cols-1">
+                              <input
+                                id={`brand-${value.id}`}
+                                type="checkbox"
+                                className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                              />
+                              <svg
+                                fill="none"
+                                viewBox="0 0 14 14"
+                                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                              >
+                                <path
+                                  d="M3 8L6 11L11 3.5"
+                                  strokeWidth={2}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="opacity-0 group-has-checked:opacity-100"
+                                />
+                                <path
+                                  d="M3 7H11"
+                                  strokeWidth={2}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="opacity-0 group-has-indeterminate:opacity-100"
+                                />
+                              </svg>
+                            </div>
                           </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="20-40" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="20-40" class="block text-sm/6 font-medium text-gray-900">20% - 40%</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="40-60" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="40-60" class="block text-sm/6 font-medium text-gray-900">40% - 60%</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="60-80" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="60-80" class="block text-sm/6 font-medium text-gray-900">60% - 80%</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="80-100" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="80-100" class="block text-sm/6 font-medium text-gray-900">80% - 100%</label>
-                          </div>
-                      </div>
-                    </DisclosurePanel>
-                  </Disclosure>
+                          <label htmlFor={`brand-${value.id}`} className="text-sm text-gray-600">
+                            {value.name}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </DisclosurePanel>
+                </Disclosure>
 
-                  <Disclosure as="div" className="border-b border-gray-200 py-6">
-                    <h3 className="-my-3 flow-root">
-                      <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
-                        <span className="font-medium text-gray-900">Rating Filter</span>
-                        <span className="ml-6 flex items-center">
-                          <PlusIcon aria-hidden="true" className="size-5 group-data-open:hidden" />
-                          <MinusIcon aria-hidden="true" className="size-5 group-not-data-open:hidden" />
-                        </span>
-                      </DisclosureButton>
-                    </h3>
-                    <DisclosurePanel className="pt-6">
-                      <div className="space-y-4">
-                          <div class="flex items-center gap-x-3">
-                            <input id="1" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="1" class="block text-sm/6 font-medium text-gray-900">1 and Above</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="2" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="2" class="block text-sm/6 font-medium text-gray-900">2 and Above</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="3" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="3" class="block text-sm/6 font-medium text-gray-900">3 and Above</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="4" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="4" class="block text-sm/6 font-medium text-gray-900">4 and Above</label>
-                          </div>
-                          <div class="flex items-center gap-x-3">
-                            <input id="5" type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
-                            <label for="5" class="block text-sm/6 font-medium text-gray-900">5 and Above</label>
-                          </div>
+                <Disclosure as="div" className="border-b border-gray-200 py-6">
+                  <h3 className="-my-3 flow-root">
+                    <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
+                      <span className="font-medium text-gray-900">Price Filter</span>
+                      <span className="ml-6 flex items-center">
+                        <PlusIcon aria-hidden="true" className="size-5 group-data-open:hidden" />
+                        <MinusIcon aria-hidden="true" className="size-5 group-not-data-open:hidden" />
+                      </span>
+                    </DisclosureButton>
+                  </h3>
+                  <DisclosurePanel className="pt-6">
+                    <div className="space-y-4">
+                      <div class="flex items-center gap-x-3">
+                        <input id="0-1000" 
+                        onClick={ () => filterPrice(0,1000) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="0-1000" class="block text-sm/6 font-medium text-gray-900">Rs.0 - Rs.1000</label>
                       </div>
-                    </DisclosurePanel>
-                  </Disclosure>
+                      <div class="flex items-center gap-x-3">
+                        <input id="1000-2000" 
+                        onClick={ () => filterPrice(1000,2000) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="1000-2000" class="block text-sm/6 font-medium text-gray-900">Rs.1000 - Rs.2000</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="2000-3000" 
+                        onClick={ () => filterPrice(2000,3000) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="2000-3000" class="block text-sm/6 font-medium text-gray-900">Rs.2000 - Rs.3000</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="3000-4000" 
+                        onClick={ () => filterPrice(3000,4000) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="3000-4000" class="block text-sm/6 font-medium text-gray-900">Rs.3000 - Rs.4000</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="5000" 
+                        onClick={ () => filterPrice(5000,'') }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="5000" class="block text-sm/6 font-medium text-gray-900">Rs.5000 and Above</label>
+                      </div>
+                    </div>
+                  </DisclosurePanel>
+                </Disclosure>
 
-                
+                <Disclosure as="div" className="border-b border-gray-200 py-6">
+                  <h3 className="-my-3 flow-root">
+                    <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
+                      <span className="font-medium text-gray-900">Discount Price Filter</span>
+                      <span className="ml-6 flex items-center">
+                        <PlusIcon aria-hidden="true" className="size-5 group-data-open:hidden" />
+                        <MinusIcon aria-hidden="true" className="size-5 group-not-data-open:hidden" />
+                      </span>
+                    </DisclosureButton>
+                  </h3>
+                  <DisclosurePanel className="pt-6">
+                    <div className="space-y-4">
+                      <div class="flex items-center gap-x-3">
+                        <input id="0-20" 
+                        onClick={ () => filterDiscountPrice(0,20) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="0-20" class="block text-sm/6 font-medium text-gray-900">0% - 20%</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="20-40" 
+                        onClick={ () => filterDiscountPrice(20,40) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="20-40" class="block text-sm/6 font-medium text-gray-900">20% - 40%</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="40-60"
+                        onClick={ () => filterDiscountPrice(40,60) }
+                         type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="40-60" class="block text-sm/6 font-medium text-gray-900">40% - 60%</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="60-80" 
+                        onClick={ () => filterDiscountPrice(60,80) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="60-80" class="block text-sm/6 font-medium text-gray-900">60% - 80%</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="80-100" 
+                        onClick={ () => filterDiscountPrice(80,100) } 
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="80-100" class="block text-sm/6 font-medium text-gray-900">80% - 100%</label>
+                      </div>
+                    </div>
+                  </DisclosurePanel>
+                </Disclosure>
+
+                <Disclosure as="div" className="border-b border-gray-200 py-6">
+                  <h3 className="-my-3 flow-root">
+                    <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
+                      <span className="font-medium text-gray-900">Rating Filter</span>
+                      <span className="ml-6 flex items-center">
+                        <PlusIcon aria-hidden="true" className="size-5 group-data-open:hidden" />
+                        <MinusIcon aria-hidden="true" className="size-5 group-not-data-open:hidden" />
+                      </span>
+                    </DisclosureButton>
+                  </h3>
+                  <DisclosurePanel className="pt-6">
+                    <div className="space-y-4">
+                      <div class="flex items-center gap-x-3">
+                        <input id="1"
+                        onClick={ () => filterRating(1) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="1" class="block text-sm/6 font-medium text-gray-900">1 and Above</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="2" 
+                        onClick={ () => filterRating(2) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="2" class="block text-sm/6 font-medium text-gray-900">2 and Above</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="3" 
+                        onClick={ () => filterRating(3) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="3" class="block text-sm/6 font-medium text-gray-900">3 and Above</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="4" 
+                        onClick={ () => filterRating(4) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="4" class="block text-sm/6 font-medium text-gray-900">4 and Above</label>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <input id="5" 
+                        onClick={ () => filterRating(5) }
+                        type="radio" name="push-notifications" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden" />
+                        <label for="5" class="block text-sm/6 font-medium text-gray-900">5 and Above</label>
+                      </div>
+                    </div>
+                  </DisclosurePanel>
+                </Disclosure>
+
+
               </form>
 
               {/* Product grid */}
@@ -498,12 +588,12 @@ export default function ProductListings() {
                 <section class="bg-gray-50 py-8 antialiased dark:bg-gray-900 md:py-4">
                   <div class="mx-auto max-w-screen-xl px-4 2xl:px-0">
                     {/* <!-- Heading & Filters --> */}
-                    
+
                     <div class="mb-4 grid gap-4 sm:grid-cols-2 md:mb-8 lg:grid-cols-3 xl:grid-cols-3">
                       {
-                        products.map((v,i) => {
-                          return(
-                            <ProductCard productData={v}/>
+                        products.map((v, i) => {
+                          return (
+                            <ProductCard productData={v} />
                           )
                         })
                       }
@@ -511,6 +601,11 @@ export default function ProductListings() {
                     <div class="w-full text-center">
                     </div>
                   </div>
+                  <ResponsivePagination
+                    current={currentPage}
+                    total={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
                 </section>
 
 
