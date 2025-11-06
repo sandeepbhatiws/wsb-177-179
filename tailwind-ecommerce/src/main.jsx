@@ -5,6 +5,7 @@ import Home from './Components/Home.jsx'
 import { BrowserRouter, Route, Routes } from 'react-router';
 import RootLayout from './Components/Common/RootLayout.jsx';
 import ProductListings from './Components/ProductListings.jsx';
+import ViewCart from './Components/ViewCart.jsx';
 
 createRoot(document.getElementById('root')).render(
 
@@ -14,6 +15,7 @@ createRoot(document.getElementById('root')).render(
         <Route element={<RootLayout/>}>
           <Route path='/' element={<Home/>} />
           <Route path='products' element={<ProductListings/>} />
+          <Route path='view-carts' element={<ViewCart/>} />
         </Route>
 
 
