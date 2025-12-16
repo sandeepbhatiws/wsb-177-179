@@ -1,7 +1,7 @@
-const materialModel = require("../../models/material")
+const colorModel = require("../../models/color")
 
 exports.create = async(request, response) => {
-    await materialModel(request.body)
+    await colorModel(request.body)
     .save()
     .then((result) => {
         const data = {
@@ -60,6 +60,11 @@ exports.view = async(request, response) => {
             var nameRegex = new RegExp(request.body.name, "i");
             andCondition.push({ name : nameRegex })
         }
+
+        if(request.body.code != '' && request.body.code != undefined){
+            var codeRegex = new RegExp(request.body.code, "i");
+            andCondition.push({ code : codeRegex })
+        }
     }
 
     if(andCondition.length > 0){
@@ -70,9 +75,9 @@ exports.view = async(request, response) => {
         filter.$or = orCondition;
     }
 
-    var total_records = await materialModel.find(filter).countDocuments();
+    var total_records = await colorModel.find(filter).countDocuments();
 
-    await materialModel.find(filter).select('name order status').limit(limit).skip(skip)
+    await colorModel.find(filter).select('name code order status').limit(limit).skip(skip)
     .sort({
         _id : 'desc'
     })
@@ -121,7 +126,7 @@ exports.view = async(request, response) => {
 
 exports.details = async(request, response) => {
 
-    materialModel.findOne({
+    colorModel.findOne({
         _id : request.params.id,
         deleted_at : null
     })
@@ -162,7 +167,7 @@ exports.update = async(request, response) => {
     var dataSave = request.body;
     dataSave.updated_at = Date.now()
 
-    materialModel.updateOne({
+    colorModel.updateOne({
         _id : request.params.id
     }, {
         $set : dataSave
@@ -203,7 +208,7 @@ exports.changeStatus = async(request, response) => {
 
     console.log(request.body.ids)
 
-    await materialModel.updateMany(
+    await colorModel.updateMany(
         { _id: { $in: request.body.ids } },
         [
             {
@@ -252,7 +257,7 @@ exports.destory = async(request, response) => {
     var dataSave = {};
     dataSave.deleted_at = Date.now()
 
-    materialModel.updateMany({
+    colorModel.updateMany({
         _id : request.body.ids
     }, {
         $set : dataSave

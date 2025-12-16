@@ -19,6 +19,7 @@ server.get('/', (request, response) => {
     response.send('Server is working Fine');
 });
 
+server.use('/uploads/categories', express.static('uploads/categories'));
 
 // Website Routes
 
@@ -28,6 +29,8 @@ server.get('/', (request, response) => {
 
 // Admin Routes
 require('./src/routes/admin/material.routes.js')(server);
+require('./src/routes/admin/color.routes.js')(server);
+require('./src/routes/admin/category.routes.js')(server);
 
 
 

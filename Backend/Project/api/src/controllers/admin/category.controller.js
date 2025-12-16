@@ -1,7 +1,39 @@
-const materialModel = require("../../models/material")
+const categoryModel = require("../../models/category")
+var slugify = require('slugify')
+require('dotenv').config()
+
+const generateUniqueSlug = async (Model, baseSlug) => {
+  let slug = baseSlug;
+  let count = 0;
+
+  // Loop to find unique slug
+  while (await Model.findOne({ slug })) {
+    count++;
+    slug = `${baseSlug}-${count}`;
+  }
+
+  return slug;
+};
 
 exports.create = async(request, response) => {
-    await materialModel(request.body)
+
+    const dataSave = request.body;
+
+    if(request.file){
+        dataSave.image = request.file.filename;
+    }
+
+    if(request.body.name){
+        var slug = slugify(request.body.name, {
+            lower: true,
+            strict: true,
+            trim: true
+        })
+
+        dataSave.slug = await generateUniqueSlug(categoryModel, slug)
+    }
+
+    await categoryModel(dataSave)
     .save()
     .then((result) => {
         const data = {
@@ -35,6 +67,8 @@ exports.view = async(request, response) => {
     var limit           = 15;
     var skip            = 0;
     var current_page    = 1;
+
+    console.log(process.env);
 
     if(request.body){
         if(request.body.limit != undefined && request.body.limit != ''){
@@ -70,9 +104,9 @@ exports.view = async(request, response) => {
         filter.$or = orCondition;
     }
 
-    var total_records = await materialModel.find(filter).countDocuments();
+    var total_records = await categoryModel.find(filter).countDocuments();
 
-    await materialModel.find(filter).select('name order status').limit(limit).skip(skip)
+    await categoryModel.find(filter).select('name image slug order status').limit(limit).skip(skip)
     .sort({
         _id : 'desc'
     })
@@ -81,6 +115,7 @@ exports.view = async(request, response) => {
             const data = {
                 _status : true,
                 _message : 'Record fetch succussfully.',
+                _image_path : process.env.category_image,
                 _paginate : {
                     current_page : current_page,
                     total_pages : Math.ceil(total_records/limit),
@@ -121,7 +156,7 @@ exports.view = async(request, response) => {
 
 exports.details = async(request, response) => {
 
-    materialModel.findOne({
+    categoryModel.findOne({
         _id : request.params.id,
         deleted_at : null
     })
@@ -130,6 +165,7 @@ exports.details = async(request, response) => {
             const data = {
                 _status : true,
                 _message : 'Record fetch succussfully.',
+                _image_path : process.env.category_image,
                 _data : result
             }
 
@@ -159,10 +195,25 @@ exports.details = async(request, response) => {
 
 exports.update = async(request, response) => {
 
-    var dataSave = request.body;
+    const dataSave = request.body;
+
+    if(request.file){
+        dataSave.image = request.file.filename;
+    }
+
+    if(request.body.name){
+        var slug = slugify(request.body.name, {
+            lower: true,
+            strict: true,
+            trim: true
+        })
+
+        dataSave.slug = await generateUniqueSlug(categoryModel, slug)
+    }
+
     dataSave.updated_at = Date.now()
 
-    materialModel.updateOne({
+    categoryModel.updateOne({
         _id : request.params.id
     }, {
         $set : dataSave
@@ -201,9 +252,7 @@ exports.update = async(request, response) => {
 
 exports.changeStatus = async(request, response) => {
 
-    console.log(request.body.ids)
-
-    await materialModel.updateMany(
+    await categoryModel.updateMany(
         { _id: { $in: request.body.ids } },
         [
             {
@@ -252,7 +301,7 @@ exports.destory = async(request, response) => {
     var dataSave = {};
     dataSave.deleted_at = Date.now()
 
-    materialModel.updateMany({
+    categoryModel.updateMany({
         _id : request.body.ids
     }, {
         $set : dataSave
