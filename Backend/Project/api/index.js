@@ -31,6 +31,8 @@ server.use('/uploads/categories', express.static('uploads/categories'));
 require('./src/routes/admin/material.routes.js')(server);
 require('./src/routes/admin/color.routes.js')(server);
 require('./src/routes/admin/category.routes.js')(server);
+require('./src/routes/admin/sub_category.routes.js')(server);
+require('./src/routes/admin/sub_sub_category.routes.js')(server);
 
 
 
