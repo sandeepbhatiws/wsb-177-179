@@ -6,8 +6,138 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router-dom';
+import axios from 'axios';
+import iziToast from 'izitoast';
+import 'izitoast/dist/css/iziToast.min.css';
 
 export default function ProductDetails() {
+
+  const [colors, setColors] = useState([]);
+  const [materials, setMaterials] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
+  const [subSubCategories, setSubSubCategories] = useState([]);
+
+  const [parentCategory, setparentCategory] = useState('');
+  const [subCategory, setSubCategory] = useState('');
+
+
+  useEffect(() => {
+    axios.post(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_PRODUCT}/view-colors`)
+      .then((result) => {
+        if(result.data._status == true){
+          setColors(result.data._data);
+        } else {
+          setColors([])
+        }
+      })
+      .catch(() => {
+        iziToast.error({
+          title: 'Error',
+          message: 'Something went wrong !!',
+          position: 'topRight',
+        });
+      })
+
+      axios.post(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_PRODUCT}/view-materials`)
+      .then((result) => {
+        if(result.data._status == true){
+          setMaterials(result.data._data);
+        } else {
+          setMaterials([])
+        }
+      })
+      .catch(() => {
+        iziToast.error({
+          title: 'Error',
+          message: 'Something went wrong !!',
+          position: 'topRight',
+        });
+      })
+
+      axios.post(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_PRODUCT}/view-categories`)
+      .then((result) => {
+        if(result.data._status == true){
+          setCategories(result.data._data);
+        } else {
+          setCategories([])
+        }
+      })
+      .catch(() => {
+        iziToast.error({
+          title: 'Error',
+          message: 'Something went wrong !!',
+          position: 'topRight',
+        });
+      })
+  }, []);
+
+  useEffect(() => {
+    if(parentCategory != ''){
+      axios.post(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_PRODUCT}/view-sub-categories`, {
+        parent_category_id : parentCategory
+      })
+        .then((result) => {
+          if(result.data._status == true){
+            setSubCategories(result.data._data);
+          } else {
+            setSubCategories([])
+          }
+        })
+        .catch(() => {
+          iziToast.error({
+            title: 'Error',
+            message: 'Something went wrong !!',
+            position: 'topRight',
+          });
+        })
+    }
+  }, [parentCategory])
+
+  useEffect(() => {
+    if(parentCategory != '' && subCategory != ''){
+      axios.post(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_PRODUCT}/view-sub-sub-categories`, {
+        parent_category_id : parentCategory,
+        sub_category_id : subCategory
+      })
+        .then((result) => {
+          if(result.data._status == true){
+            setSubSubCategories(result.data._data);
+          } else {
+            setSubSubCategories([])
+          }
+        })
+        .catch(() => {
+          iziToast.error({
+            title: 'Error',
+            message: 'Something went wrong !!',
+            position: 'topRight',
+          });
+        })
+    }
+  }, [subCategory])
+
+  const selectParentCategory = (event) => {
+    setparentCategory(event.target.value);
+    setSubCategories([])
+    setSubSubCategories([]);
+  }
+
+  const selectSubCategory = (event) => {
+    setSubCategory(event.target.value);
+    setSubSubCategories([]);
+  }
+
+  const handleSubmit = () => {
+
+  }
+
+
+
+
+
+
+
 
   useEffect(() => {
     $(".dropify").dropify({
@@ -22,11 +152,11 @@ export default function ProductDetails() {
 
   const [value, setValue] = useState('');
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm();
+  // const {
+  //   register,
+  //   handleSubmit,
+  //   formState: { errors }
+  // } = useForm();
 
   const onSubmit = (data) => {
     console.log("Form Data:", data);
@@ -68,11 +198,9 @@ export default function ProductDetails() {
         </ol>
       </nav>
 
-
-
       <div className='w-full px-6 py-6  '>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit} autoComplete='off'>
           <div className="grid grid-cols-3 gap-[10px] ">
             {/* for left */}
             <div className="for-images ">
@@ -86,31 +214,11 @@ export default function ProductDetails() {
                 </label>
                 <input
                   type="file"
-                  id="ProductImage"
+                  name='image'
+                  id="image"
                   className="dropify"
                   data-height="160"
-                  {...register("productImage", { required: "Product Image is required" })}
                 />
-                {errors.productImage && <p className="text-red-500 text-sm">{errors.productImage.message}</p>}
-
-
-              </div>
-
-              <div className="">
-                <label
-                  htmlFor="backImage"
-                  className="block  text-md font-medium text-gray-900 text-[#76838f]"
-                >
-                  Back Image
-                </label>
-                <input
-                  type="file"
-                  id="backImage"
-                  className="dropify"
-                  data-height="160"
-                  {...register("backImage", { required: "Back Image is required" })}
-                />
-                {errors.backImage && <p className="text-red-500 text-sm">{errors.backImage.message}</p>}
               </div>
 
               <div className="">
@@ -122,12 +230,12 @@ export default function ProductDetails() {
                 </label>
                 <input
                   type="file"
-                  id="GalleryImage"
+                  name='images'
+                  id="images"
                   className="dropify"
                   data-height="160"
-                  {...register("GalleryImage", { required: "Gallery Image is required" })}
+                  multiple
                 />
-                {errors.GalleryImage && <p className="text-red-500 text-sm">{errors.GalleryImage.message}</p>}
               </div>
             </div>
 
@@ -145,9 +253,8 @@ export default function ProductDetails() {
                   type="text"
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder='Prodct Name'
-                  {...register("Prodct_Name", { required: "Prodct Name is required" })}
+                  name='name'
                 />
-                {errors.Prodct_Name && <p className="text-red-500 text-sm">{errors.Prodct_Name.message}</p>}
               </div>
 
               <div className="mb-5">
@@ -158,16 +265,19 @@ export default function ProductDetails() {
                   Select Sub Category
                 </label>
                 <select
-                  {...register("Sub_Category", { required: "Sub Category is required" })}
+                  name='sub_category_id'
+                  onChange={selectSubCategory}
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Select Category</option>
-                  <option value="mobile">Mobile Phones</option>
-                  <option value="laptop">Laptops</option>
-                  <option value="men">Men's Wear</option>
-                  <option value="women">Women's Wear</option>
+                  {
+                    subCategories.map((v) => {
+                      return(
+                        <option value={v._id}> {v.name} </option>
+                      )
+                    })
+                  }
 
                 </select>
-                {errors.Sub_Category && <p className="text-red-500 text-sm">{errors.Sub_Category.message}</p>}
 
               </div>
 
@@ -179,20 +289,36 @@ export default function ProductDetails() {
                   Select Meterial
                 </label>
                 <select
-                  {...register("Meterial", { required: "Meterial is required" })}
+                  name='material_id'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
-                  <option value="">Neem</option>
-                  <option value="">Babbul</option>
-                  <option value="">Neem</option>
-                  <option value="">Babbul</option>
-                  <option value="">Neem</option>
-                  <option value="">Babbul</option>
-                  <option value="">Neem</option>
-                  <option value="">Babbul</option>
+                  
+                  {
+                    materials.map((v) => {
+                      return(
+                        <option value={v._id}> {v.name} </option>
+                      )
+                    })
+                  }
 
                 </select>
-                {errors.Meterial && <p className="text-red-500 text-sm">{errors.Meterial.message}</p>}
+              </div>
+              
+              <div className="mb-5">
+                <label
+                  htmlFor="categoryName"
+                  className="block  text-md font-medium text-gray-900 text-[#76838f]"
+                >
+                  Is New Arrival
+                </label>
+                <select
+                  name='is_new_arrivals'
+                  className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
+                  <option value="">Nothing Selected</option>
+                  <option value="1">Yes</option>
+                  <option value="2">No</option>
+
+                </select>
               </div>
 
               <div className="mb-5">
@@ -200,22 +326,37 @@ export default function ProductDetails() {
                   htmlFor="categoryName"
                   className="block  text-md font-medium text-gray-900 text-[#76838f]"
                 >
-                  Select Prodcut Type
+                  Is Featured
                 </label>
                 <select
-                  {...register("Prodcut_Type", { required: "Prodcut Type is required" })}
+                name='is_featured'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
-                  <option value="">Featured</option>
-                  <option value="">New Arrivals</option>
-                  <option value="">Onsale</option>
-
+                  <option value="1">Yes</option>
+                  <option value="2">No</option>
 
                 </select>
-                {errors.Prodcut_Type && <p className="text-red-500 text-sm">{errors.Prodcut_Type.message}</p>}
               </div>
 
               <div className="mb-5">
+                <label
+                  htmlFor="categoryName"
+                  className="block  text-md font-medium text-gray-900 text-[#76838f]"
+                >
+                  Is On Sale
+                </label>
+                <select
+                name='is_on_sale'
+                  className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
+                  <option value="">Nothing Selected</option>
+                  <option value="1">Yes</option>
+                  <option value="2">No</option>
+
+                </select>
+              </div>
+              
+
+              {/* <div className="mb-5">
                 <label
                   htmlFor="categoryName"
                   className="block  text-md font-medium text-gray-900 text-[#76838f]"
@@ -223,15 +364,14 @@ export default function ProductDetails() {
                   Is Top Rated
                 </label>
                 <select
-                  {...register("Rated", { required: "Top Rated is required" })}
+                name='is_top_rated'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
                   <option value="">Yes</option>
                   <option value="">No</option>
 
                 </select>
-                {errors.Rated && <p className="text-red-500 text-sm">{errors.Rated.message}</p>}
-              </div>
+              </div> */}
 
               <div className="mb-5">
                 <label
@@ -241,12 +381,12 @@ export default function ProductDetails() {
                   Actual Price
                 </label>
                 <input
+                name='actual_price'
                   type="text"
-                  {...register("Actual_Price", { required: " Actual Price is required" })}
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder='Actual Price'
                 />
-                {errors.Actual_Price && <p className="text-red-500 text-sm">{errors.Actual_Price.message}</p>}
+
               </div>
 
               <div className="mb-5">
@@ -254,16 +394,33 @@ export default function ProductDetails() {
                   htmlFor="categoryName"
                   className="block  text-md font-medium text-gray-900 text-[#76838f]"
                 >
-                  Total In Stocks
+                  Code
                 </label>
                 <input
+                name='code'
                   type="text"
-                  {...register("Stocks", { required: "Stocks is required" })}
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
-                  placeholder='Total In Stocks'
+                  placeholder='Code'
                 />
-                {errors.Stocks && <p className="text-red-500 text-sm">{errors.Stocks.message}</p>}
+
               </div>
+
+              <div className="mb-5">
+                <label
+                  htmlFor="categoryName"
+                  className="block  text-md font-medium text-gray-900 text-[#76838f]"
+                >
+                  Dimension
+                </label>
+                <input
+                name='dimension'
+                  type="text"
+                  className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
+                  placeholder='Dimension'
+                />
+
+              </div>
+
 
 
 
@@ -279,18 +436,20 @@ export default function ProductDetails() {
                   Select Parent Category
                 </label>
                 <select
-                  {...register("Parent_Category", { required: "Parent Category is required" })}
+                  name='parent_category_id'
+                  onChange={ selectParentCategory }
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
 
-                  <option value="mobile">Mobile Phones</option>
-                  <option value="laptop">Laptops</option>
-
-                  <option value="men">Men's Wear</option>
-                  <option value="women">Women's Wear</option>
+                  {
+                    categories.map((v) => {
+                      return(
+                        <option value={v._id}> {v.name} </option>
+                      )
+                    })
+                  }
 
                 </select>
-                {errors.Parent_Category && <p className="text-red-500 text-sm">{errors.Parent_Category.message}</p>}
               </div>
 
               <div className="mb-5">
@@ -301,18 +460,19 @@ export default function ProductDetails() {
                   Select Sub Sub Category
                 </label>
                 <select
-                  {...register("Sub_Sub_Category", { required: "Sub Sub Category is required" })}
+                  name='sub_sub_category_id'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
 
-                  <option value="mobile">Mobile Phones</option>
-                  <option value="laptop">Laptops</option>
-
-                  <option value="men">Men's Wear</option>
-                  <option value="women">Women's Wear</option>
+                  {
+                    subSubCategories.map((v) => {
+                      return(
+                        <option value={v._id}> {v.name} </option>
+                      )
+                    })
+                  }
 
                 </select>
-                {errors.Sub_Sub_Category && <p className="text-red-500 text-sm">{errors.Sub_Sub_Category.message}</p>}
               </div>
 
               <div className="mb-5">
@@ -323,18 +483,19 @@ export default function ProductDetails() {
                   Select Color
                 </label>
                 <select
-                  {...register("Color", { required: "Color is required" })}
+                  name='color_id'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
 
-                  <option value="">Red</option>
-                  <option value="">Blue</option>
-
-                  <option value="">Green</option>
-                  <option value="">Gray</option>
+                  {
+                    colors.map((v) => {
+                      return(
+                        <option value={v._id}> {v.name} </option>
+                      )
+                    })
+                  }
 
                 </select>
-                {errors.Color && <p className="text-red-500 text-sm">{errors.Color.message}</p>}
               </div>
 
               <div className="mb-5">
@@ -345,14 +506,13 @@ export default function ProductDetails() {
                   Is Best Selling
                 </label>
                 <select
-                  {...register("Selling", { required: " Best Selling is required" })}
+                name='is_best_selling'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
-                  <option value="">Yes</option>
-                  <option value="">No</option>
+                  <option value="1">Yes</option>
+                  <option value="2">No</option>
 
                 </select>
-                {errors.Selling && <p className="text-red-500 text-sm">{errors.Selling.message}</p>}
               </div>
 
               <div className="mb-5">
@@ -363,14 +523,30 @@ export default function ProductDetails() {
                   Is Upsell
                 </label>
                 <select
-                  {...register("Upsell", { required: "Upsell is required" })}
+                name='is_upsell'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
-                  <option value="">Yes</option>
-                  <option value="">No</option>
+                  <option value="1">Yes</option>
+                  <option value="2">No</option>
 
                 </select>
-                {errors.Upsell && <p className="text-red-500 text-sm">{errors.Upsell.message}</p>}
+              </div>
+
+              <div className="mb-5">
+                <label
+                  htmlFor="categoryName"
+                  className="block  text-md font-medium text-gray-900 text-[#76838f]"
+                >
+                  Is Trending
+                </label>
+                <select
+                name='is_trending'
+                  className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
+                  <option value="">Nothing Selected</option>
+                  <option value="1">Yes</option>
+                  <option value="2">No</option>
+
+                </select>
               </div>
 
               <div className="mb-5">
@@ -382,11 +558,25 @@ export default function ProductDetails() {
                 </label>
                 <input
                   type="text"
+                  name='sale_price'
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder=' Sale Price'
-                  {...register("Sale_Price", { required: "Sale Price is required" })}
                 />
-                {errors.Sale_Price && <p className="text-red-500 text-sm">{errors.Sale_Price.message}</p>}
+              </div>
+
+              <div className="mb-5">
+                <label
+                  htmlFor="categoryName"
+                  className="block  text-md font-medium text-gray-900 text-[#76838f]"
+                >
+                  Delivery Days
+                </label>
+                <input
+                  type="text"
+                  name='delivery_days'
+                  className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
+                  placeholder=' Delivery Days'
+                />
               </div>
 
 
@@ -399,16 +589,29 @@ export default function ProductDetails() {
                 </label>
                 <input
                   type="text"
+                  name='order'
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder='Order'
-                  {...register("Order", { required: " Order is required" })}
                 />
-                {errors.Order && <p className="text-red-500 text-sm">{errors.Order.message}</p>}
               </div>
 
 
             </div>
           </div>
+          
+          <div className='py-[40px]'>
+            <label
+              htmlFor="categoryImage"
+              className="block  text-md font-medium text-gray-900 text-[#76838f]"
+            >
+              Short Description
+            </label>
+            <textarea className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
+                   name='short_description'></textarea>
+
+          </div>
+
+
 
           <div className='py-[40px]'>
             <label
@@ -417,16 +620,13 @@ export default function ProductDetails() {
             >
               Description
             </label>
-            <ReactQuill theme="snow" value={value} onChange={setValue} className='h-[200px]' {...register("description", { required: "Description is required" })} />
+            <ReactQuill theme="snow" value={value} onChange={setValue} className='h-[200px]'  />
 
           </div>
-          {errors.description && (
-            <p className="text-red-500 text-sm">{errors.description.message}</p>
-          )}
 
           <button class=" mt-5 text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 ">
-             {updateIdState ? "Update Product " : "Add Product"}
-             </button>
+            {updateIdState ? "Update Product " : "Add Product"}
+          </button>
 
         </form>
 
