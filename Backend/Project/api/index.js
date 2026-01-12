@@ -20,9 +20,10 @@ server.get('/', (request, response) => {
 });
 
 server.use('/uploads/categories', express.static('uploads/categories'));
+server.use('/uploads/products', express.static('uploads/products'));
 
 // Website Routes
-
+require('./src/routes/website/user.routes.js')(server);
 
 // Application Routes
 

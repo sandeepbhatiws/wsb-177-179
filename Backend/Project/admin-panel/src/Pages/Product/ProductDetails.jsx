@@ -5,7 +5,7 @@ import "dropify/dist/js/dropify.min.js";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useForm } from 'react-hook-form';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
@@ -128,17 +128,6 @@ export default function ProductDetails() {
     setSubSubCategories([]);
   }
 
-  const handleSubmit = () => {
-
-  }
-
-
-
-
-
-
-
-
   useEffect(() => {
     $(".dropify").dropify({
       messages: {
@@ -152,27 +141,133 @@ export default function ProductDetails() {
 
   const [value, setValue] = useState('');
 
-  // const {
-  //   register,
-  //   handleSubmit,
-  //   formState: { errors }
-  // } = useForm();
 
-  const onSubmit = (data) => {
-    console.log("Form Data:", data);
-    // alert("Product Created Successfully!");
-  };
-  // update work
-  const [updateIdState, setUpdateIdState] = useState(false)
-  let updateId = useParams().id
+  const [imagePath, setImagePath] = useState('');
+
   useEffect(() => {
-    if (updateId == undefined) {
-      setUpdateIdState(false)
+    const dropifyElement = $("#image");
+
+    if (dropifyElement.data("dropify")) {
+      dropifyElement.data("dropify").destroy();
+      dropifyElement.removeData("dropify");
     }
-    else {
-      setUpdateIdState(true)
+
+    // **Force Update Dropify Input**
+    dropifyElement.replaceWith(
+      `<input type="file" accept="image/*" name="image" id="image"
+          class="dropify" data-height="250" data-default-file="${imagePath}"/>`
+    );
+
+    // **Reinitialize Dropify**
+    $("#image").dropify();
+
+  }, [imagePath]); // ✅ Runs when `defaultImage` updates
+
+  // update work
+  const [updateIdState, setUpdateIdState] = useState('')
+  const [productDetails, setProductDetails] = useState('');
+
+  const navigate = useNavigate()
+
+  let params = useParams()
+  useEffect(() => {
+    if (params.id != undefined) {
+      setUpdateIdState(params.id)
+
+      axios.post(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_PRODUCT}/details/${params.id}`)
+        .then((result) => {
+          if (result.data._status == true) {
+            setProductDetails(result.data._data)
+            setparentCategory(result.data._data.parent_category_id);
+            setSubCategory(result.data._data.sub_category_id)
+            setValue(result.data._data.long_description)
+            setImagePath(result.data._image_path + result.data._data.image);
+          } else {
+            setProductDetails('');
+          }
+        })
+        .catch(() => {
+          iziToast.error({
+            title: 'Error',
+            message: 'Something went wrong !!',
+            position: 'topRight',
+          });
+        });
     }
-  }, [updateId])
+  }, [params])
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const data = new FormData(event.target);
+
+    // const data = event.target
+
+    data.append('long_description', value);
+
+    if (params.id == undefined) {
+      // Create Record API
+      axios.post(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_PRODUCT}/create`, data)
+        .then((result) => {
+          if (result.data._status == true) {
+            iziToast.success({
+              title: 'Success',
+              message: result.data._message,
+              position: 'topRight',
+            });
+
+            event.target.reset();
+            navigate('/product/view')
+
+          } else {
+            iziToast.error({
+              title: 'Error',
+              message: result.data._message,
+              position: 'topRight',
+            });
+          }
+        })
+        .catch(() => {
+          iziToast.error({
+            title: 'Error',
+            message: 'Something went wrong !!',
+            position: 'topRight',
+          });
+        })
+    } else {
+      // Update Record API
+      axios.put(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_PRODUCT}/update/${params.id}`, data)
+        .then((result) => {
+          if (result.data._status == true) {
+            iziToast.success({
+              title: 'Success',
+              message: result.data._message,
+              position: 'topRight',
+            });
+
+            event.target.reset();
+            navigate('/product/view')
+
+          } else {
+            iziToast.error({
+              title: 'Error',
+              message: result.data._message,
+              position: 'topRight',
+            });
+          }
+        })
+        .catch(() => {
+          iziToast.error({
+            title: 'Error',
+            message: 'Something went wrong !!',
+            position: 'topRight',
+          });
+        })
+    }
+
+  }
+
+
   return (
     <section className="w-full">
 
@@ -251,6 +346,7 @@ export default function ProductDetails() {
                 </label>
                 <input
                   type="text"
+                  defaultValue={ productDetails.name }
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder='Prodct Name'
                   name='name'
@@ -272,7 +368,7 @@ export default function ProductDetails() {
                   {
                     subCategories.map((v) => {
                       return(
-                        <option value={v._id}> {v.name} </option>
+                        <option value={v._id} selected={ productDetails.sub_category_id == v._id ? 'selected' : '' }   > {v.name} </option>
                       )
                     })
                   }
@@ -296,7 +392,7 @@ export default function ProductDetails() {
                   {
                     materials.map((v) => {
                       return(
-                        <option value={v._id}> {v.name} </option>
+                        <option value={v._id} selected={ productDetails.material_id == v._id ? 'selected' : '' }> {v.name} </option>
                       )
                     })
                   }
@@ -315,8 +411,8 @@ export default function ProductDetails() {
                   name='is_new_arrivals'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
-                  <option value="1">Yes</option>
-                  <option value="2">No</option>
+                  <option value="1" selected={ productDetails.is_new_arrivals == 1 ? 'selected' : '' }>Yes</option>
+                  <option value="2" selected={ productDetails.is_new_arrivals == 2 ? 'selected' : '' }>No</option>
 
                 </select>
               </div>
@@ -332,8 +428,8 @@ export default function ProductDetails() {
                 name='is_featured'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
-                  <option value="1">Yes</option>
-                  <option value="2">No</option>
+                  <option value="1" selected={ productDetails.is_featured == 1 ? 'selected' : '' }>Yes</option>
+                  <option value="2" selected={ productDetails.is_featured == 2 ? 'selected' : '' }>No</option>
 
                 </select>
               </div>
@@ -349,8 +445,8 @@ export default function ProductDetails() {
                 name='is_on_sale'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
-                  <option value="1">Yes</option>
-                  <option value="2">No</option>
+                  <option value="1" selected={ productDetails.is_on_sale == 1 ? 'selected' : '' }>Yes</option>
+                  <option value="2" selected={ productDetails.is_on_sale == 2 ? 'selected' : '' }>No</option>
 
                 </select>
               </div>
@@ -383,6 +479,7 @@ export default function ProductDetails() {
                 <input
                 name='actual_price'
                   type="text"
+                  defaultValue={productDetails.actual_price}
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder='Actual Price'
                 />
@@ -399,6 +496,7 @@ export default function ProductDetails() {
                 <input
                 name='code'
                   type="text"
+                  defaultValue={productDetails.code}
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder='Code'
                 />
@@ -414,6 +512,7 @@ export default function ProductDetails() {
                 </label>
                 <input
                 name='dimension'
+                defaultValue={productDetails.dimension}
                   type="text"
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder='Dimension'
@@ -444,7 +543,7 @@ export default function ProductDetails() {
                   {
                     categories.map((v) => {
                       return(
-                        <option value={v._id}> {v.name} </option>
+                        <option value={v._id} selected={ productDetails.parent_category_id == v._id ? 'selected' : '' } > {v.name} </option>
                       )
                     })
                   }
@@ -467,7 +566,7 @@ export default function ProductDetails() {
                   {
                     subSubCategories.map((v) => {
                       return(
-                        <option value={v._id}> {v.name} </option>
+                        <option value={v._id} selected={ productDetails.sub_sub_category_id == v._id ? 'selected' : '' }> {v.name} </option>
                       )
                     })
                   }
@@ -490,7 +589,7 @@ export default function ProductDetails() {
                   {
                     colors.map((v) => {
                       return(
-                        <option value={v._id}> {v.name} </option>
+                        <option value={v._id} selected={ productDetails.color_id == v._id ? 'selected' : '' }> {v.name} </option>
                       )
                     })
                   }
@@ -509,8 +608,8 @@ export default function ProductDetails() {
                 name='is_best_selling'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
-                  <option value="1">Yes</option>
-                  <option value="2">No</option>
+                  <option value="1" selected={ productDetails.is_best_selling == 1 ? 'selected' : '' }>Yes</option>
+                  <option value="2" selected={ productDetails.is_best_selling == 2 ? 'selected' : '' }>No</option>
 
                 </select>
               </div>
@@ -526,8 +625,8 @@ export default function ProductDetails() {
                 name='is_upsell'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
-                  <option value="1">Yes</option>
-                  <option value="2">No</option>
+                  <option value="1" selected={ productDetails.is_best_selling == 1 ? 'selected' : '' }>Yes</option>
+                  <option value="2" selected={ productDetails.is_best_selling == 2 ? 'selected' : '' }>No</option>
 
                 </select>
               </div>
@@ -543,8 +642,8 @@ export default function ProductDetails() {
                 name='is_trending'
                   className="text-[19px] text-[#76838f] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg block w-full py-2.5 px-3">
                   <option value="">Nothing Selected</option>
-                  <option value="1">Yes</option>
-                  <option value="2">No</option>
+                  <option value="1" selected={ productDetails.is_best_selling == 1 ? 'selected' : '' }>Yes</option>
+                  <option value="2" selected={ productDetails.is_best_selling == 2 ? 'selected' : '' }>No</option>
 
                 </select>
               </div>
@@ -559,6 +658,7 @@ export default function ProductDetails() {
                 <input
                   type="text"
                   name='sale_price'
+                  defaultValue={productDetails.sale_price}
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder=' Sale Price'
                 />
@@ -573,6 +673,7 @@ export default function ProductDetails() {
                 </label>
                 <input
                   type="text"
+                  defaultValue={productDetails.delivery_days}
                   name='delivery_days'
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder=' Delivery Days'
@@ -589,6 +690,7 @@ export default function ProductDetails() {
                 </label>
                 <input
                   type="text"
+                  defaultValue={productDetails.order}
                   name='order'
                   className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
                   placeholder='Order'
@@ -607,7 +709,7 @@ export default function ProductDetails() {
               Short Description
             </label>
             <textarea className="text-[19px] border-2 shadow-sm border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 px-3"
-                   name='short_description'></textarea>
+                   name='short_description' defaultValue={productDetails.short_description}></textarea>
 
           </div>
 
