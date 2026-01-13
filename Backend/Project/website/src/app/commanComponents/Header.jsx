@@ -11,8 +11,16 @@ import { RxCross2 } from "react-icons/rx";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Accordion from 'react-bootstrap/Accordion';
 import { FaAngleDown } from "react-icons/fa6";
+import { ToastContainer } from "react-toastify";
+import { useSelector } from "react-redux";
 
 export default function Header() {
+
+    const isLogin = useSelector((state) => {
+        return state.login.is_login;
+    })
+
+
     const [showCart, setShowCart] = useState(false);
 
     const handleCloseCart = () => setShowCart(false);
@@ -26,6 +34,7 @@ export default function Header() {
     return (
         <>
             {/* Desktop Header */}
+            <ToastContainer/>
             <div className="d-none d-lg-block" >
                 <Container fluid className="border-bottom myheader-top ">
                     <Container>
@@ -36,13 +45,23 @@ export default function Header() {
                                 </div>
                             </Col>
                             <Col lg={5} md={12}>
-
-                                <Link href={"/login-register"}>
-                                    <ul className="auth d-flex justify-content-end">
-                                        <li>Login &nbsp;/</li>
-                                        <li>Register</li>
-                                    </ul>
-                                </Link>
+                                {
+                                    isLogin == 0
+                                    ?
+                                    <Link href={"/login-register"}>
+                                        <ul className="auth d-flex justify-content-end">
+                                            <li>Login &nbsp;/</li>
+                                            <li>Register</li>
+                                        </ul>
+                                    </Link>
+                                    :
+                                    <Link href={"/my-dashboard"}>
+                                        <ul className="auth d-flex justify-content-end">
+                                            <li>My Dashboard</li>
+                                        </ul>
+                                    </Link>
+                                }
+                                
 
                             </Col>
                         </Row>
