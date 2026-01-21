@@ -1,11 +1,101 @@
 'use client'
 import Link from 'next/link';
-import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import { Col, Container, Form, Row } from 'react-bootstrap';
+import { useDispatch } from 'react-redux';
+import { logoutUser } from '../ReduxToolkit/loginSlice';
+import { toast } from 'react-toastify';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 export default function DashboardPage() {
     const [activeTab, setActiveTab] = useState('dashboard');
-    const [selectedTitle, setSelectedTitle] = useState("Mr.");
+
+
+    const [selectedTitle, setSelectedTitle] = useState("");
+
+    const dispatch = useDispatch();
+    var router = useRouter();
+
+    const logout = () => {
+        dispatch(logoutUser());
+        toast.success('logout succussfully')
+        router.push('/');
+    }
+
+    const [userProfile, setUserProfile] = useState('');
+
+    useEffect(() => {
+        axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/users/view-profile`,'', {
+            headers : {
+                'Authorization' : `Bearer ${ Cookies.get('user_token') }`
+            }
+        })
+        .then((result) => {
+            if(result.data._status == true){
+                setUserProfile(result.data._data);
+                setSelectedTitle(result.data._data.gender)
+            } else {
+                toast.error(result.data._message)
+                setUserProfile('')
+            }
+        })
+        .catch(() => {
+            toast.error('Something went wrong !')
+        })
+    }, [])
+
+
+    const [updateLoader, setUpdateLoader] = useState(false);
+
+    const updateProfile = (event) => {
+        event.preventDefault();
+        setUpdateLoader(true);
+
+        axios.put(`${process.env.NEXT_PUBLIC_BASE_URL}/users/update-profile`, event.target , {
+            headers : {
+                'Authorization' : `Bearer ${ Cookies.get('user_token') }`
+            }
+        })
+        .then((result) => {
+            if(result.data._status == true){
+                toast.success(result.data._message)
+                setUpdateLoader(false);
+            } else {
+                toast.error(result.data._message)
+                setUpdateLoader(false);
+            }
+        })
+        .catch(() => {
+            toast.error('Something went wrong !')
+            setUpdateLoader(false);
+        })
+    }
+
+    const changePassword = (event) => {
+        event.preventDefault();
+        setUpdateLoader(true);
+
+        axios.put(`${process.env.NEXT_PUBLIC_BASE_URL}/users/change-password`, event.target , {
+            headers : {
+                'Authorization' : `Bearer ${ Cookies.get('user_token') }`
+            }
+        })
+        .then((result) => {
+            if(result.data._status == true){
+                toast.success(result.data._message)
+                setUpdateLoader(false);
+            } else {
+                toast.error(result.data._message)
+                setUpdateLoader(false);
+            }
+        })
+        .catch(() => {
+            toast.error('Something went wrong !')
+            setUpdateLoader(false);
+        })
+    }
 
     return (
         <>
@@ -41,7 +131,7 @@ export default function DashboardPage() {
 
                                 <li><a onClick={() => setActiveTab('password')} className={`nav-link ${activeTab === 'password' ? 'active' : ''}`}>Change Password</a></li>
 
-                                <li><Link href="/" className='nav-link'>Logout</Link></li>
+                                <li><a className='nav-link' onClick={logout}>Logout</a></li>
                             </ul>
                         </Col>
 
@@ -262,8 +352,6 @@ export default function DashboardPage() {
 
                             )}
 
-
-
                             {/* Profile Content */}
                             {activeTab === 'profile' && (
                                 <div className='tab-content dashboard_content'>
@@ -271,30 +359,33 @@ export default function DashboardPage() {
                                     <div className="login">
                                         <div className="account_form login_form_container">
                                             <div className="account_login_form">
-                                                <form id="personal_information" autoComplete="off" noValidate="noValidate" className="bv-form">
+                                                <form onSubmit={updateProfile} id="personal_information" autoComplete="off" noValidate="noValidate" className="bv-form">
 
                                                     <div className="col-xl-12">
                                                         <div className="input-radio">
                                                             <span className="custom-radio">
                                                                 <input
                                                                     type="radio"
-                                                                    value="Mr."
-                                                                    name="title"
-                                                                    checked={selectedTitle === "Mr."}
+                                                                    value="Male"
+                                                                    id='male'
+                                                                    name="gender"
+                                                                    checked={selectedTitle === "Male"}
                                                                     onChange={(e) => setSelectedTitle(e.target.value)}
                                                                 />
-                                                                Mr.
+                                                                <label for="male">Male</label>
                                                             </span>
 
                                                             <span className="custom-radio">
                                                                 <input
                                                                     type="radio"
-                                                                    value="Mrs."
-                                                                    name="title"
-                                                                    checked={selectedTitle === "Mrs."}
+                                                                    value="Female"
+                                                                    name="gender"
+                                                                    id='Female'
+                                                                    checked={selectedTitle === "Female"}
                                                                     onChange={(e) => setSelectedTitle(e.target.value)}
                                                                 />
-                                                                Mrs.
+                                                                <label for="Female">Female</label>
+                                                                
                                                             </span>
                                                         </div>
                                                     </div>
@@ -302,34 +393,51 @@ export default function DashboardPage() {
                                                     <div className="col-xl-12">
                                                         <div className="form-group has-feedback">
                                                             <label htmlFor="name">Name*</label>
-                                                            <input type="text" className="form-control" id="name" name="name" data-bv-field="name" />
+                                                            <input type="text" 
+                                                            defaultValue={userProfile.name}
+                                                            className="form-control" id="name" name="name" data-bv-field="name" />
                                                         </div>
                                                     </div>
 
                                                     <div className="col-xl-12">
                                                         <div className="form-group has-feedback">
                                                             <label htmlFor="name">Email*</label>
-                                                            <input type="text" className="form-control" id="email" name="email" placeholdere="sultankhan.wscube@gmail.com" readOnly="readOnly" data-bv-field="email" />
+                                                            <input type="text" 
+                                                            value={userProfile.email}
+                                                            className="form-control" id="email" placeholdere="sultankhan.wscube@gmail.com" readOnly="readOnly" data-bv-field="email" />
                                                         </div>
                                                     </div>
 
                                                     <div className="col-xl-12">
                                                         <div className="form-group has-feedback">
                                                             <label htmlFor="name">Mobile Number*</label>
-                                                            <input type="text" className="form-control numeric" id="mobile_number" maxLength="15" name="mobile_number" data-bv-field="mobile_number" />
+                                                            <input type="number" 
+                                                            defaultValue={userProfile.mobile_number}
+                                                            name='mobile_number'
+                                                            className="form-control numeric" id="mobile_number" maxLength="15" data-bv-field="mobile_number" />
                                                         </div>
                                                     </div>
 
                                                     <div className="col-xl-12">
                                                         <div className="form-group has-feedback">
                                                             <label htmlFor="name">Address*</label>
-                                                            <input type="text" className="form-control" name="address" id="address"  data-bv-field="address" />
+                                                            <input type="text"
+                                                            defaultValue={userProfile.address}
+                                                            className="form-control" name="address" id="address"  data-bv-field="address" />
                                                         </div>
                                                     </div>
 
 
                                                     <div className="login_submit">
-                                                        <button type="submit" className="common_btn text-uppercase" title="Update" id="updateInfo">Update</button>
+                                                        <button type="submit" className="common_btn text-uppercase" title="Update" id="updateInfo" disabled={updateLoader} >
+                                                            {
+                                                                updateLoader
+                                                                ?
+                                                                'Loading...'
+                                                                :
+                                                                'Update'
+                                                            }
+                                                        </button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -346,21 +454,21 @@ export default function DashboardPage() {
                                 <div className="login">
                                     <div className="account_form login_form_container">
                                         <div className="account_login_form">
-                                        <form method="POST" acceptCharset="UTF-8" id="change_password" className="bv-form" autoComplete="off" noValidate="noValidate">
+                                        <form onSubmit={changePassword} method="POST" acceptCharset="UTF-8" id="change_password" className="bv-form" autoComplete="off" noValidate="noValidate">
 
                                             <div className="form-group has-feedback">
                                                 <label>Current Password</label>
-                                                <input type="password" className="form-control" name="currentpassword" id="currentpassword" data-bv-field="currentpassword"/>
+                                                <input type="password" className="form-control" name="current_password" id="currentpassword" data-bv-field="currentpassword"/>
                                             </div>
 
                                             <div className="form-group has-feedback">
                                                 <label>New Password</label>
-                                                <input type="password" className="form-control" name="password" id="password" data-bv-field="password" />
+                                                <input type="password" className="form-control" name="new_password" id="password" data-bv-field="password" />
                                             </div>
 
                                             <div className="form-group has-feedback">
                                                 <label>Confirm Password</label>
-                                                <input type="password" className="form-control" id="confirmPassword" name="confirmPassword" data-bv-field="confirmPassword" />
+                                                <input type="password" className="form-control" id="confirm_password" name="confirm_password" data-bv-field="confirmPassword" />
                                             </div>
 
                                             <br/>

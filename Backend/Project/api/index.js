@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
+require('dotenv').config()
 
 const server = express(); // make Executable Function
 
@@ -24,6 +25,7 @@ server.use('/uploads/products', express.static('uploads/products'));
 
 // Website Routes
 require('./src/routes/website/user.routes.js')(server);
+require('./src/routes/website/order.routes.js')(server);
 
 // Application Routes
 
@@ -35,11 +37,12 @@ require('./src/routes/admin/category.routes.js')(server);
 require('./src/routes/admin/sub_category.routes.js')(server);
 require('./src/routes/admin/sub_sub_category.routes.js')(server);
 require('./src/routes/admin/product.routes.js')(server);
+require('./src/routes/admin/dashboard.routes.js')(server);
 
 
 
 
 server.listen(8000, () => {
-    mongoose.connect('mongodb://127.0.0.1:27017/monsta_api').then(() => console.log('Connected!'));
+    mongoose.connect(process.env.db_connection).then(() => console.log('Connected!'));
     console.log('Server is working Fine');
 })

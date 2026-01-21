@@ -12,18 +12,22 @@ export const userLogin = createSlice({
   name: 'login',
   initialState,
   reducers: {
-    login: (state) => {
+    login: (state, action) => {
+      console.log(action);
+      state.is_login = action.payload;
+      Cookies.set('user_token', action.payload);
     },
     register: (state) => {
     
     },
-    logout: (state, action) => {
-
+    logoutUser: (state) => {
+      state.is_login = '';
+      Cookies.remove('user_token');
     },
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { login, register, logout } = userLogin.actions
+export const { login, register, logoutUser } = userLogin.actions
 
 export default userLogin.reducer

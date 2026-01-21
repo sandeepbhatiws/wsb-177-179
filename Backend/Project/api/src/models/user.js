@@ -26,6 +26,11 @@ const schema = new mongoose.Schema({
         type : String,
         default : ''
     },
+    mobile_number : {
+        type : String,
+        default : ''
+    },
+    
     gender : {
         type : String,
         default : '',  // 1 - male 2 - female

@@ -365,6 +365,7 @@ exports.forgotPassword = async (request, response) => {
 exports.resetPassword = async (request, response) => {
     var token = request.body.token;
 
+    
     try {
         var decoded = jwt.verify(token, secretKey);
     } catch (error) {
